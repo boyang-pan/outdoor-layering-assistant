@@ -39,6 +39,54 @@ export async function geocodeLocation(query: string): Promise<{ lat: number; lon
   return { lat: r.latitude, lon: r.longitude, label }
 }
 
+export async function searchLocations(query: string): Promise<Array<{ lat: number; lon: number; label: string }>> {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch {
+    return []
+  }
+  if (!res.ok) return []
+  const json = await res.json()
+  const parsed = GeoResultSchema.safeParse(json)
+  if (!parsed.success || !parsed.data.results?.length) return []
+  return parsed.data.results.map(r => ({
+    lat: r.latitude,
+    lon: r.longitude,
+    label: [r.name, r.admin1, r.country].filter(Boolean).join(', '),
+  }))
+}
+
+const NominatimSchema = z.object({
+  address: z.object({
+    city: z.string().optional(),
+    town: z.string().optional(),
+    village: z.string().optional(),
+    state: z.string().optional(),
+    country: z.string().optional(),
+  }),
+})
+
+export async function reverseGeocodeLocation(lat: number, lon: number): Promise<{ lat: number; lon: number; label: string }> {
+  const fallbackLabel = `${lat.toFixed(2)}, ${lon.toFixed(2)}`
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      { headers: { 'User-Agent': 'outdoor-layering-assistant/1.0' } }
+    )
+    if (!res.ok) return { lat, lon, label: fallbackLabel }
+    const json = await res.json()
+    const parsed = NominatimSchema.safeParse(json)
+    if (!parsed.success) return { lat, lon, label: fallbackLabel }
+    const { city, town, village, state, country } = parsed.data.address
+    const label = [city ?? town ?? village, state, country].filter(Boolean).join(', ')
+    return { lat, lon, label: label || fallbackLabel }
+  } catch {
+    return { lat, lon, label: fallbackLabel }
+  }
+}
+
 // ─── Forecast ─────────────────────────────────────────────────────────────────
 const ForecastSchema = z.object({
   hourly: z.object({

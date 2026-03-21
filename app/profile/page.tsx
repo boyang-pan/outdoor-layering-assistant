@@ -11,6 +11,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { defaultProfile, type Activity } from '@/lib/types'
 import { clearAll } from '@/lib/storage'
 import { geocodeLocation } from '@/lib/weather'
+import { LocationInput } from '@/components/ui/LocationInput'
 
 const PACE_OPTIONS = [
   { label: 'Leisurely · 15–20 km/h', value: 17 },
@@ -144,21 +145,18 @@ export default function ProfilePage() {
           </div>
 
           <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.5px] mt-5 mb-3">Default location</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="City or postcode"
+          <div className="flex gap-2 items-start">
+            <LocationInput
               value={locationText}
-              onChange={e => setLocationText(e.target.value)}
-              onBlur={saveLocation}
-              className="flex-1 h-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-subtle)] rounded-[var(--radius-md)] px-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-              style={{ fontSize: '16px' }}
+              onChange={setLocationText}
+              onSelect={loc => { setProfile({ ...profile, defaultLocation: loc }); setLocationText(loc.label) }}
+              className="flex-1"
             />
             <button
               type="button"
               onClick={saveLocation}
               disabled={locationLoading}
-              className="h-10 px-4 rounded-[var(--radius-md)] bg-[var(--color-accent)] text-white text-[12px] font-medium disabled:opacity-50"
+              className="h-12 px-4 rounded-[var(--radius-md)] bg-[var(--color-accent)] text-white text-[12px] font-medium disabled:opacity-50 shrink-0"
             >
               Save
             </button>

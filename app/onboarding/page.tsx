@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
 import { useProfile } from '@/hooks/useProfile'
-import { geocodeLocation } from '@/lib/weather'
+import { geocodeLocation, reverseGeocodeLocation } from '@/lib/weather'
+import { LocationInput } from '@/components/ui/LocationInput'
 import { MapPin, Loader2 } from 'lucide-react'
 
 const HEAT_OPTIONS = [
@@ -43,12 +44,9 @@ export default function OnboardingPage() {
       async (pos) => {
         try {
           const { lat, lon } = { lat: pos.coords.latitude, lon: pos.coords.longitude }
-          // Reverse geocode via a search with lat/lon — use coords directly
-          setProfile({
-            ...profile,
-            defaultLocation: { lat, lon, label: `${lat.toFixed(2)}, ${lon.toFixed(2)}` },
-          })
-          setLocationText(`${lat.toFixed(2)}, ${lon.toFixed(2)}`)
+          const loc = await reverseGeocodeLocation(lat, lon)
+          setProfile({ ...profile, defaultLocation: loc })
+          setLocationText(loc.label)
         } finally {
           setGeoLoading(false)
         }
@@ -129,13 +127,11 @@ export default function OnboardingPage() {
             {geoLoading ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} strokeWidth={1.5} />}
             Use my location
           </button>
-          <input
-            type="text"
-            placeholder="Or enter a city or postcode"
+          <LocationInput
             value={locationText}
-            onChange={e => setLocationText(e.target.value)}
-            className="w-full h-12 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-[var(--radius-md)] px-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
-            style={{ fontSize: '16px' }}
+            onChange={setLocationText}
+            onSelect={loc => { setProfile({ ...profile, defaultLocation: loc }); setLocationText(loc.label) }}
+            placeholder="Or enter a city or postcode"
           />
           {geoError && <p className="text-[var(--color-status-red)] text-[12px] mt-2">{geoError}</p>}
         </div>
