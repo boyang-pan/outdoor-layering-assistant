@@ -47,6 +47,12 @@ body {
   box-sizing: border-box;
 }
 
+/* Select option colours (inherits OS dark mode on most browsers) */
+select option {
+  background-color: var(--color-bg-raised);
+  color: var(--color-text-primary);
+}
+
 /* Hide number input spinners */
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {

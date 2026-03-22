@@ -13,7 +13,7 @@ import { useSession } from '@/hooks/useSession'
 import { useProfile } from '@/hooks/useProfile'
 import { sessionName, type LayerSet } from '@/lib/types'
 import { formatTime, DURATION_LABELS, DURATION_MINS } from '@/lib/utils'
-import { Shirt, Layers, Wind, Footprints, Hand, Crown } from 'lucide-react'
+import { Shirt, Layers, Wind, Footprints, Hand, Crown, Bike } from 'lucide-react'
 
 function durationLabel(mins: number): string {
   const idx = DURATION_MINS.indexOf(mins)
@@ -115,7 +115,13 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         <SectionLabel>Extras</SectionLabel>
         <Card className="mb-6">
           <LayerRow icon={<Hand size={16} strokeWidth={1.5} />} label="Gloves" value={layers.gloves} />
+          {layers.helmet && (
+            <LayerRow icon={<Bike size={16} strokeWidth={1.5} />} label="Helmet" value={layers.helmet} />
+          )}
           <LayerRow icon={<Crown size={16} strokeWidth={1.5} />} label="Hat / buff" value={layers.hat} />
+          {layers.feet && (
+            <LayerRow icon={<Footprints size={16} strokeWidth={1.5} />} label="Feet" value={layers.feet} />
+          )}
         </Card>
 
         {/* Guidance */}
@@ -129,7 +135,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           <ConfidenceBar label="Wind" value={rec.confidence.wind} />
           <ConfidenceBar label="Personalised" value={rec.confidence.personalised} />
           <p className="text-[11px] text-[var(--color-text-muted)] pt-1">
-            Session {profile.sessionCount} of ~10 for full calibration.
+            {profile.feedbackCount} rated session{profile.feedbackCount !== 1 ? 's' : ''} — more ratings sharpen future recommendations.
           </p>
         </Card>
 

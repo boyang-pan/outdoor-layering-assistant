@@ -40,6 +40,8 @@ export interface LayerSet {
   legs: string
   gloves: string
   hat: string
+  feet: string
+  helmet?: string
 }
 
 // ─── Weather ──────────────────────────────────────────────────────────────────
@@ -55,7 +57,7 @@ export interface WeatherSnapshot {
 
 // ─── Feedback ─────────────────────────────────────────────────────────────────
 export type ThermalRating = 'too_cold' | 'good' | 'too_warm'
-export type BodyZone = 'top' | 'jacket' | 'legs' | 'hands' | 'overall'
+export type BodyZone = 'top' | 'jacket' | 'legs' | 'hands' | 'feet' | 'overall'
 
 export interface PhaseRating {
   rating: ThermalRating
