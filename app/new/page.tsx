@@ -24,9 +24,9 @@ const LOADING_MESSAGES = [
   { title: 'Finalising recommendation', sub: (n: number, pct: number) => `Session ${n} · Calibration ${pct}%` },
 ]
 
-function LoadingOverlay({ city, temp, activity, intensity, duration, sessionN, calibPct }: {
+function LoadingOverlay({ city, temp, activity, intensity, duration, sessionN, ratedSessions }: {
   city: string; temp: number; activity: string; intensity: string; duration: string
-  sessionN: number; calibPct: number
+  sessionN: number; ratedSessions: number
 }) {
   const [step, setStep] = useState(0)
 
@@ -40,7 +40,7 @@ function LoadingOverlay({ city, temp, activity, intensity, duration, sessionN, c
       case 0: return { title: 'Fetching weather data', sub: `${city} · ${temp}°C` }
       case 1: return { title: 'Applying activity model', sub: `${activity} · ${intensity} · ${duration}` }
       case 2: return { title: 'Checking forecast window', sub: `Covering full ${duration} window` }
-      case 3: return { title: 'Finalising recommendation', sub: `Session ${sessionN} · Calibration ${calibPct}%` }
+      case 3: return { title: 'Finalising recommendation', sub: `Session ${sessionN} · ${ratedSessions} rated` }
       default: return { title: '', sub: '' }
     }
   }
@@ -148,7 +148,7 @@ export default function NewPage() {
           sessionId: id,
           generatedAt: new Date().toISOString(),
           weatherSnapshot: weather,
-          layers: { baseLayer: '', midLayer: '', jacket: '', legs: '', gloves: '', hat: '' },
+          layers: { baseLayer: '', midLayer: '', jacket: '', legs: '', gloves: '', hat: '', feet: '' },
           guidanceLine: '',
           deltaWarning: null,
           confidence: { temperature: 0, wind: 0, personalised: 0 },
@@ -176,8 +176,6 @@ export default function NewPage() {
     }
   }
 
-  const calibPct = Math.round(Math.min(100, (profile.feedbackCount / 10) * 100))
-
   return (
     <>
       {loading && (
@@ -188,7 +186,7 @@ export default function NewPage() {
           intensity={intensity}
           duration={DURATION_LABELS[durationIdx]}
           sessionN={profile.sessionCount + 1}
-          calibPct={calibPct}
+          ratedSessions={profile.feedbackCount}
         />
       )}
       <div className="pb-8 page-enter">

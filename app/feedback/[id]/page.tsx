@@ -11,25 +11,41 @@ import { updateProfile, feedbackInsight } from '@/lib/personalization'
 import { saveProfile, getProfile } from '@/lib/storage'
 import type { BodyZone, Feedback, LayerEdit, LayerSet, PhaseRating, ThermalRating, WoreDifferentState } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, X } from 'lucide-react'
+import { CheckCircle2, ChevronDown } from 'lucide-react'
 
 const ZONE_LABELS: Record<BodyZone, string> = {
-  top: 'Top', jacket: 'Jacket', legs: 'Legs', hands: 'Hands', overall: 'Overall'
+  top: 'Base layer', jacket: 'Jacket', legs: 'Legs', hands: 'Hands', feet: 'Feet', overall: 'Overall'
 }
-const ALL_ZONES: BodyZone[] = ['top', 'jacket', 'legs', 'hands', 'overall']
+const ALL_ZONES: BodyZone[] = ['top', 'jacket', 'legs', 'hands', 'feet', 'overall']
 
-const ALTERNATIVES: Record<keyof LayerSet, string[]> = {
-  baseLayer: ['Short-sleeve top', 'Long-sleeve top', 'Long-sleeve thermal top', 'Other'],
-  midLayer: ['Skip it', 'Lightweight fleece', 'Heavyweight fleece', 'Insulated gilet', 'Other'],
-  jacket: ['No jacket', 'Lightweight wind jacket', 'Waterproof rain jacket', 'Softshell', 'Other'],
-  legs: ['Short running tights', 'Full-length running tights', 'Bib tights', 'Shorts', 'Other'],
-  gloves: ['No gloves', 'Thin liner gloves', 'Insulated running gloves', 'Other'],
-  hat: ['Nothing', 'Running cap', 'Thermal beanie', 'Neck buff', 'Other'],
+const SKIPPED_VALUE = "Didn't wear this"
+
+function getAlternatives(activity: string): Partial<Record<keyof LayerSet, string[]>> {
+  if (activity === 'cycle') {
+    return {
+      baseLayer: ['Short-sleeve jersey', 'Long-sleeve jersey', 'Thermal long-sleeve jersey', 'Other', SKIPPED_VALUE],
+      midLayer: ['Skip it', 'Lightweight cycling gilet', 'Insulated gilet', 'Heavyweight fleece', 'Other', SKIPPED_VALUE],
+      jacket: ['No jacket', 'Cycling wind jacket', 'Waterproof cycling jacket', 'Softshell', 'Other', SKIPPED_VALUE],
+      legs: ['Bib shorts', 'Full-length bib tights', 'Shorts', 'Other', SKIPPED_VALUE],
+      gloves: ['No gloves', 'Thin liner gloves', 'Insulated cycling gloves', 'Other', SKIPPED_VALUE],
+      hat: ['Nothing', 'Cycling cap', 'Thermal beanie', 'Neck buff', 'Other', SKIPPED_VALUE],
+      feet: ['Cycling socks', 'Lightweight overshoes', 'Insulated overshoes', 'Insulated overshoes + thermal socks', SKIPPED_VALUE],
+    }
+  }
+  return {
+    baseLayer: ['Short-sleeve top', 'Long-sleeve top', 'Long-sleeve thermal top', 'Other', SKIPPED_VALUE],
+    midLayer: ['Skip it', 'Lightweight fleece', 'Heavyweight fleece', 'Insulated gilet', 'Other', SKIPPED_VALUE],
+    jacket: ['No jacket', 'Lightweight wind jacket', 'Waterproof rain jacket', 'Softshell', 'Other', SKIPPED_VALUE],
+    legs: ['Short running tights', 'Full-length running tights', 'Shorts', 'Other', SKIPPED_VALUE],
+    gloves: ['No gloves', 'Thin liner gloves', 'Insulated running gloves', 'Other', SKIPPED_VALUE],
+    hat: ['Nothing', 'Running cap', 'Thermal beanie', 'Neck buff', 'Other', SKIPPED_VALUE],
+    feet: ['Standard running socks', 'Warm running socks', 'Thermal running socks', SKIPPED_VALUE],
+  }
 }
 
-const LAYER_LABELS: Record<keyof LayerSet, string> = {
+const LAYER_LABELS: Partial<Record<keyof LayerSet, string>> = {
   baseLayer: 'Base layer', midLayer: 'Fleece', jacket: 'Jacket',
-  legs: 'Legs', gloves: 'Gloves', hat: 'Hat',
+  legs: 'Legs', gloves: 'Gloves', hat: 'Hat', feet: 'Feet',
 }
 
 type Phase = 'start' | 'middle' | 'end'
@@ -106,7 +122,7 @@ export default function FeedbackPage({ params }: { params: Promise<{ id: string 
   const { profile } = useProfile()
 
   const [edits, setEdits] = useState<LayerEdit[]>([])
-  const [expandedZone, setExpandedZone] = useState<keyof LayerSet | null>(null)
+  const [otherZone, setOtherZone] = useState<keyof LayerSet | null>(null)
   const [otherInputs, setOtherInputs] = useState<Partial<Record<keyof LayerSet, string>>>({})
   const [phases, setPhases] = useState<Record<Phase, { rating: ThermalRating | null; zones: BodyZone[] }>>({
     start: { rating: null, zones: [] },
@@ -122,26 +138,28 @@ export default function FeedbackPage({ params }: { params: Promise<{ id: string 
   }
 
   const layers = session.recommendation.layers
+  const ALTERNATIVES = getAlternatives(session.activity)
 
-  const toggleSkip = (zone: keyof LayerSet) => {
-    setEdits(prev => {
-      const existing = prev.find(e => e.zone === zone)
-      if (existing?.action === 'skipped') return prev.filter(e => e.zone !== zone)
-      return [...prev.filter(e => e.zone !== zone), { zone, action: 'skipped' }]
-    })
-  }
-
-  const selectAlternative = (zone: keyof LayerSet, val: string) => {
-    if (val === 'Other') { setExpandedZone(zone); return }
-    setEdits(prev => [...prev.filter(e => e.zone !== zone), { zone, action: 'substituted', substituteValue: val }])
-    setExpandedZone(null)
+  const handleSelectChange = (zone: keyof LayerSet, val: string) => {
+    if (val === 'Other') {
+      setOtherZone(zone)
+      return
+    }
+    setOtherZone(null)
+    if (val === SKIPPED_VALUE) {
+      setEdits(prev => [...prev.filter(e => e.zone !== zone), { zone, action: 'skipped' }])
+    } else if (val === layers[zone]) {
+      setEdits(prev => prev.filter(e => e.zone !== zone))
+    } else {
+      setEdits(prev => [...prev.filter(e => e.zone !== zone), { zone, action: 'substituted', substituteValue: val }])
+    }
   }
 
   const submitOther = (zone: keyof LayerSet) => {
     const val = otherInputs[zone]?.trim()
     if (!val) return
     setEdits(prev => [...prev.filter(e => e.zone !== zone), { zone, action: 'substituted', substituteValue: val }])
-    setExpandedZone(null)
+    setOtherZone(null)
   }
 
   const setPhaseRating = (phase: Phase, rating: ThermalRating) => {
@@ -190,9 +208,10 @@ export default function FeedbackPage({ params }: { params: Promise<{ id: string 
   }
 
   const feedbackCount = profile.feedbackCount
-  const calibPct = Math.min(100, Math.round((feedbackCount / 10) * 100))
 
   if (submitted) {
+    const ratedAfter = feedbackCount + 1
+    const barPct = Math.min(100, Math.round((ratedAfter / 20) * 100))
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-5">
         <CheckCircle2 size={40} strokeWidth={1.5} className="text-[var(--color-status-green)] mb-4" />
@@ -200,11 +219,11 @@ export default function FeedbackPage({ params }: { params: Promise<{ id: string 
         <p className="text-[13px] text-[var(--color-text-secondary)] text-center mb-6">{insight}</p>
         <div className="w-full mb-6">
           <div className="flex justify-between text-[11px] text-[var(--color-text-muted)] mb-1.5">
-            <span>Calibration</span>
-            <span className="font-mono">{calibPct}%</span>
+            <span>Rated sessions</span>
+            <span className="font-mono">{ratedAfter} <span className="font-sans font-normal">(keeps improving)</span></span>
           </div>
           <div className="h-1.5 rounded-full bg-[var(--color-bg-raised)]">
-            <div className="h-1.5 rounded-full bg-[var(--color-accent)] transition-all" style={{ width: `${calibPct}%` }} />
+            <div className="h-1.5 rounded-full bg-[var(--color-accent)] transition-all" style={{ width: `${barPct}%` }} />
           </div>
         </div>
         <Button onClick={() => router.push('/')}>Back to home</Button>
@@ -217,76 +236,67 @@ export default function FeedbackPage({ params }: { params: Promise<{ id: string 
       <TopBar />
       <div className="px-5 py-6">
         {/* Section A: Recap */}
-        <SectionLabel className="mt-0">What we recommended</SectionLabel>
+        <SectionLabel className="mt-0">What did you wear?</SectionLabel>
         <Card className="mb-6">
           {(Object.keys(LAYER_LABELS) as (keyof LayerSet)[]).map(zone => {
             const edit = edits.find(e => e.zone === zone)
-            const displayVal = edit?.action === 'substituted' ? edit.substituteValue! : layers[zone]
             const isSkipped = edit?.action === 'skipped'
+            const alts = ALTERNATIVES[zone] ?? []
+            const selectVal = isSkipped
+              ? SKIPPED_VALUE
+              : edit?.action === 'substituted'
+              ? (alts.includes(edit.substituteValue!) ? edit.substituteValue! : 'Other')
+              : layers[zone]
+            // Options: recommended value first (if not already in list), then alternatives
+            const opts = [
+              layers[zone],
+              ...alts.filter(a => a !== layers[zone]),
+            ]
             return (
-              <div key={zone}>
-                <div className="flex items-center gap-2 py-2.5 border-b border-[var(--color-border-subtle)] last:border-0">
+              <div key={zone} className="py-2.5 border-b border-[var(--color-border-subtle)] last:border-0">
+                <div className="flex items-center gap-2">
                   <span className="text-[12px] text-[var(--color-text-muted)] w-20 shrink-0">{LAYER_LABELS[zone]}</span>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedZone(expandedZone === zone ? null : zone)}
-                    className={cn(
-                      'flex-1 text-left text-[13px] font-medium transition-colors',
-                      isSkipped
-                        ? 'line-through text-[var(--color-text-muted)]'
-                        : edit?.action === 'substituted'
-                        ? 'text-[var(--color-accent-light)]'
-                        : 'text-[var(--color-text-primary)] hover:text-[var(--color-accent-light)]'
-                    )}
-                  >
-                    {displayVal}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleSkip(zone)}
-                    className={cn(
-                      'h-6 w-6 rounded border flex items-center justify-center text-[11px] transition-all',
-                      isSkipped
-                        ? 'bg-[var(--color-status-red-bg)] border-red-500/30 text-[var(--color-status-red)]'
-                        : 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)] hover:border-[var(--color-border-base)]'
-                    )}
-                    title="Didn't wear this"
-                  >
-                    <X size={11} strokeWidth={2} />
-                  </button>
+                  <div className="relative flex-1">
+                    <select
+                      value={otherZone === zone ? 'Other' : selectVal}
+                      onChange={e => handleSelectChange(zone, e.target.value)}
+                      className={cn(
+                        'appearance-none w-full h-8 rounded-[var(--radius-sm)] border pl-3 pr-8 text-[13px] font-medium bg-[var(--color-bg-raised)] focus:outline-none focus:border-[var(--color-accent)] transition-colors',
+                        isSkipped
+                          ? 'border-[var(--color-border-subtle)] text-[var(--color-text-muted)]'
+                          : edit?.action === 'substituted'
+                          ? 'border-[var(--color-accent)] text-[var(--color-accent-light)]'
+                          : 'border-[var(--color-border-subtle)] text-[var(--color-text-primary)]'
+                      )}
+                    >
+                      {opts.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={13}
+                      strokeWidth={2}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]"
+                    />
+                  </div>
                 </div>
-                {expandedZone === zone && !isSkipped && (
-                  <div className="pl-20 pb-3 space-y-1">
-                    {ALTERNATIVES[zone].map(alt => (
-                      <button
-                        key={alt}
-                        type="button"
-                        onClick={() => selectAlternative(zone, alt)}
-                        className="w-full text-left text-[12px] py-1.5 px-2 rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-raised)] hover:text-[var(--color-text-primary)] transition-colors"
-                      >
-                        {alt}
-                      </button>
-                    ))}
-                    {expandedZone === zone && (
-                      <div className="flex gap-2 mt-2">
-                        <input
-                          type="text"
-                          maxLength={80}
-                          placeholder="Describe what you wore"
-                          value={otherInputs[zone] ?? ''}
-                          onChange={e => setOtherInputs(prev => ({ ...prev, [zone]: e.target.value }))}
-                          className="flex-1 h-9 bg-[var(--color-bg-raised)] border border-[var(--color-border-base)] rounded px-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
-                          style={{ fontSize: '16px' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => submitOther(zone)}
-                          className="h-9 px-3 rounded bg-[var(--color-accent)] text-white text-[12px] font-medium"
-                        >
-                          Set
-                        </button>
-                      </div>
-                    )}
+                {otherZone === zone && !isSkipped && (
+                  <div className="flex gap-2 mt-2 pl-22">
+                    <input
+                      type="text"
+                      maxLength={80}
+                      placeholder="Describe what you wore"
+                      value={otherInputs[zone] ?? ''}
+                      onChange={e => setOtherInputs(prev => ({ ...prev, [zone]: e.target.value }))}
+                      className="flex-1 h-8 bg-[var(--color-bg-raised)] border border-[var(--color-border-base)] rounded-[var(--radius-sm)] px-2 text-[12px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => submitOther(zone)}
+                      className="h-8 px-3 rounded-[var(--radius-sm)] bg-[var(--color-accent)] text-white text-[12px] font-medium"
+                    >
+                      Set
+                    </button>
                   </div>
                 )}
               </div>

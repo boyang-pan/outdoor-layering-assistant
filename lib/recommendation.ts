@@ -25,6 +25,7 @@ function baselineRecommendation(
       legs: 'Short running tights',
       gloves: 'No gloves',
       hat: 'Nothing',
+      feet: 'Standard running socks',
     }
   }
   if (minApparentTemp >= 12) {
@@ -35,6 +36,7 @@ function baselineRecommendation(
       legs: 'Short running tights',
       gloves: 'No gloves',
       hat: 'Nothing',
+      feet: 'Standard running socks',
     }
   }
   if (minApparentTemp >= 6) {
@@ -45,6 +47,7 @@ function baselineRecommendation(
       legs: 'Full-length running tights',
       gloves: minApparentTemp < 8 ? 'Thin liner gloves' : 'No gloves',
       hat: 'Nothing',
+      feet: 'Warm running socks',
     }
   }
   if (minApparentTemp >= 0) {
@@ -55,6 +58,7 @@ function baselineRecommendation(
       legs: 'Full-length running tights',
       gloves: 'Thin liner gloves',
       hat: 'Thermal beanie',
+      feet: 'Thermal running socks',
     }
   }
   // < 0
@@ -65,6 +69,7 @@ function baselineRecommendation(
     legs: 'Bib tights',
     gloves: 'Insulated running gloves',
     hat: 'Thermal beanie + neck buff',
+    feet: 'Thermal running socks',
   }
 }
 
@@ -110,6 +115,31 @@ function applyOverrides(
     if (result.jacket === 'No jacket') result.jacket = 'Lightweight wind jacket'
   }
 
+  return result
+}
+
+// ─── Step 4a: Activity-specific labels ────────────────────────────────────────
+function applyActivityLabels(layers: LayerSet, activity: Activity, minApparentTemp: number): LayerSet {
+  if (activity !== 'cycle') return layers
+  const result = { ...layers }
+  // Upper body
+  if (result.baseLayer === 'Short-sleeve top') result.baseLayer = 'Short-sleeve jersey'
+  if (result.baseLayer === 'Long-sleeve top') result.baseLayer = 'Long-sleeve jersey'
+  if (result.baseLayer === 'Long-sleeve thermal top') result.baseLayer = 'Thermal long-sleeve jersey'
+  if (result.midLayer === 'Lightweight fleece') result.midLayer = 'Lightweight cycling gilet'
+  if (result.jacket === 'Lightweight wind jacket') result.jacket = 'Cycling wind jacket'
+  if (result.jacket === 'Waterproof rain jacket') result.jacket = 'Waterproof cycling jacket'
+  // Lower body & extras
+  if (result.legs === 'Short running tights') result.legs = 'Bib shorts'
+  if (result.legs === 'Full-length running tights') result.legs = 'Full-length bib tights'
+  if (result.hat === 'Running cap') result.hat = 'Cycling cap'
+  if (result.gloves === 'Insulated running gloves') result.gloves = 'Insulated cycling gloves'
+  // Feet (cycling-specific thresholds — feet get cold faster without muscle activity)
+  if (minApparentTemp > 15) result.feet = 'Cycling socks'
+  else if (minApparentTemp > 8) result.feet = 'Lightweight overshoes'
+  else if (minApparentTemp > 4) result.feet = 'Insulated overshoes'
+  else result.feet = 'Insulated overshoes + thermal socks'
+  result.helmet = 'Cycling helmet'
   return result
 }
 
@@ -211,6 +241,7 @@ export function computeRecommendation(session: Session, profile: UserProfile): R
   let layers = baselineRecommendation(weather.minApparentTemp, effWind)
   layers = applyOverrides(layers, weather, session.activity, session.intensity, session.durationMins, effWind)
   layers = applyPersonalization(layers, profile)
+  layers = applyActivityLabels(layers, session.activity, weather.minApparentTemp)
 
   return {
     sessionId: session.id,
@@ -224,4 +255,4 @@ export function computeRecommendation(session: Session, profile: UserProfile): R
 }
 
 // Export internals for testing
-export { effectiveWindspeed, baselineRecommendation, applyOverrides, applyPersonalization, deltaWarning, confidenceScores }
+export { effectiveWindspeed, baselineRecommendation, applyOverrides, applyPersonalization, applyActivityLabels, deltaWarning, confidenceScores }

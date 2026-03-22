@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { StatCard } from '@/components/ui/StatCard'
 import { SectionLabel } from '@/components/ui/SectionLabel'
-import { Callout } from '@/components/ui/Callout'
 import { useProfile } from '@/hooks/useProfile'
 import { useSessions } from '@/hooks/useSession'
 import { fetchWeatherWindow } from '@/lib/weather'
@@ -97,8 +96,6 @@ export default function HomePage() {
   }).length
   const goodPct = completeSessions.length > 0 ? Math.round((goodCount / completeSessions.length) * 100) : 0
   const feedbackDue = sessions.filter(s => s.status === 'feedback_pending').length
-  const toCalibrate = Math.max(0, 10 - profile.sessionCount)
-
   if (!loaded) return null
 
   return (
@@ -133,18 +130,10 @@ export default function HomePage() {
         <div className="grid grid-cols-2 gap-2.5">
           <StatCard value={profile.sessionCount} label="Sessions" />
           <StatCard value={`${goodPct}%`} label="Good rating" />
-          <StatCard value={toCalibrate} label="To calibrate" />
+          <StatCard value={profile.feedbackCount} label="Rated sessions" />
           <StatCard value={feedbackDue} label="Feedback due" />
         </div>
-
-        {profile.sessionCount < 10 && (
-          <>
-            <SectionLabel>Calibration</SectionLabel>
-            <Callout>
-              {toCalibrate} more session{toCalibrate !== 1 ? 's' : ''} with feedback to fully calibrate
-            </Callout>
-          </>
-        )}
+        <p className="text-[11px] text-[var(--color-text-muted)] mt-2">More ratings = sharper recommendations</p>
       </div>
       <BottomNav />
     </div>

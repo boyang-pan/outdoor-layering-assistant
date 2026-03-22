@@ -106,25 +106,32 @@ export default function ProfilePage() {
           ))}
         </Card>
 
-        {/* Calibration */}
-        <SectionLabel>Calibration</SectionLabel>
+        {/* Your profile */}
+        <SectionLabel>Your profile</SectionLabel>
         <Card className="mb-2.5 space-y-3">
           <div>
             <div className="flex justify-between text-[12px] text-[var(--color-text-muted)] mb-1.5">
-              <span>Overall</span>
-              <span className="font-mono">{Math.min(100, Math.round((profile.sessionCount / 10) * 100))}%</span>
+              <span>Rated sessions</span>
+              <span className="font-mono">{profile.feedbackCount} <span className="text-[var(--color-text-muted)] font-sans font-normal">(keeps improving)</span></span>
             </div>
-            <ProgressBar value={profile.sessionCount} max={10} />
+            <ProgressBar value={profile.feedbackCount} max={20} />
           </div>
-          {ACTIVITIES.map(a => (
-            <div key={a}>
-              <div className="flex justify-between text-[12px] text-[var(--color-text-muted)] mb-1.5">
-                <span>{ACTIVITY_LABELS[a]}</span>
-                <span className="font-mono">{profile.sessionCount > 0 ? `${Math.min(100, profile.sessionCount * 10)}%` : '0%'}</span>
-              </div>
-              <ProgressBar value={profile.sessionCount} max={10} />
-            </div>
-          ))}
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] text-[var(--color-text-muted)]">Heat tendency</span>
+            <span className="text-[12px] text-[var(--color-text-secondary)]">{heatLabel(profile.heatSensitivity)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] text-[var(--color-text-muted)]">Activity tuning</span>
+            <span className="text-[12px] text-[var(--color-text-secondary)]">
+              {profile.sessionCount >= 3 ? 'Active' : 'Needs 3+ sessions'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[12px] text-[var(--color-text-muted)]">Intensity tuning</span>
+            <span className="text-[12px] text-[var(--color-text-secondary)]">
+              {profile.sessionCount >= 5 ? 'Active' : 'Needs 5+ sessions'}
+            </span>
+          </div>
         </Card>
 
         {/* Settings */}
