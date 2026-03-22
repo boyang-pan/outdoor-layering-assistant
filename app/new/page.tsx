@@ -14,7 +14,7 @@ import { fetchWeatherWindow, geocodeLocation } from '@/lib/weather'
 import { getLastUsed, saveLastUsed } from '@/lib/storage'
 import type { Activity, Intensity, Session } from '@/lib/types'
 import { defaultProfile } from '@/lib/types'
-import { DURATION_LABELS, DURATION_MINS, formatTime, nextQuarter } from '@/lib/utils'
+import { DURATION_LABELS, DURATION_MINS, formatTime } from '@/lib/utils'
 import { MapPin, Loader2 } from 'lucide-react'
 
 const LOADING_MESSAGES = [
@@ -65,7 +65,11 @@ export default function NewPage() {
   const [activity, setActivity] = useState<Activity>((lastUsed?.activity as Activity) ?? 'run')
   const [durationIdx, setDurationIdx] = useState(lastUsed?.durationIdx ?? 1) // default 45 min
   const [intensity, setIntensity] = useState<Intensity>('moderate')
-  const [departureTime, setDepartureTime] = useState(() => nextQuarter(new Date()))
+  const [departureTime, setDepartureTime] = useState(() => {
+    const d = new Date()
+    d.setSeconds(0, 0)
+    return d
+  })
   const [locationText, setLocationText] = useState(profile.defaultLocation?.label ?? '')
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lon: number } | null>(
     profile.defaultLocation ? { lat: profile.defaultLocation.lat, lon: profile.defaultLocation.lon } : null
