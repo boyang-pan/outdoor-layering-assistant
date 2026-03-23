@@ -16,7 +16,7 @@ export function TopBar() {
     <header className="sticky top-0 z-20 h-[57px] flex items-center justify-between px-5 bg-[var(--color-bg-base)] border-b border-[var(--color-border-subtle)]">
       <div className="flex items-center gap-6 self-stretch">
         <Link href="/" className="text-[var(--color-text-primary)] font-semibold text-base tracking-tight">
-          Layer
+          👕
         </Link>
         <nav className="hidden md:flex items-center self-stretch gap-1">
           {NAV_ITEMS.map(({ href, label }) => {
