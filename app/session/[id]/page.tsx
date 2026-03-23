@@ -13,7 +13,8 @@ import { useSession } from '@/hooks/useSession'
 import { useProfile } from '@/hooks/useProfile'
 import { sessionName, type LayerSet } from '@/lib/types'
 import { formatTime, DURATION_LABELS, DURATION_MINS } from '@/lib/utils'
-import { Shirt, Layers, Wind, Footprints, Hand, Crown, Bike } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Shirt, Layers, Wind, Footprints, Hand, Crown, Bike, Circle } from 'lucide-react'
 
 function durationLabel(mins: number): string {
   const idx = DURATION_MINS.indexOf(mins)
@@ -29,11 +30,12 @@ function LayerTag({ value }: { value: string }) {
 }
 
 function LayerRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  const inactive = value === 'Skip it' || value === 'No jacket' || value === 'No gloves' || value === 'Nothing'
   return (
     <div className="flex items-center gap-2.5 py-2.5 border-b border-[var(--color-border-subtle)] last:border-0">
       <span className="text-[var(--color-text-muted)] w-4 shrink-0">{icon}</span>
       <span className="text-[12px] text-[var(--color-text-muted)] w-24 shrink-0">{label}</span>
-      <span className="flex-1 text-[13px] font-medium text-[var(--color-text-primary)]">{value}</span>
+      <span className={cn('flex-1 text-[13px] font-medium', inactive ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]')}>{value}</span>
       <LayerTag value={value} />
     </div>
   )
@@ -80,6 +82,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   const handleHeadOut = () => {
     saveSession({ ...session, status: 'feedback_pending' })
+    router.push('/')
   }
 
   const activityLabel: Record<string, string> = { run: 'Run', cycle: 'Cycle', other: 'Other' }
@@ -89,6 +92,12 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     <div className="pb-20 md:pb-8 page-enter">
       <TopBar />
       <div className="px-5 py-6">
+        {session.status === 'expired' && (
+          <Callout variant="warn" className="mb-4">
+            Feedback window closed — ratings are only collected within 48 hours of a session to keep recommendations accurate.
+          </Callout>
+        )}
+
         {/* Header chips */}
         <div className="flex flex-wrap gap-2 mb-6">
           <Chip variant="blue">{activityLabel[session.activity]}</Chip>
@@ -118,7 +127,10 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           {layers.helmet && (
             <LayerRow icon={<Bike size={16} strokeWidth={1.5} />} label="Helmet" value={layers.helmet} />
           )}
-          <LayerRow icon={<Crown size={16} strokeWidth={1.5} />} label="Hat / buff" value={layers.hat} />
+          <LayerRow icon={<Crown size={16} strokeWidth={1.5} />} label="Hat" value={layers.hat} />
+          {layers.neck && layers.neck !== 'Nothing' && (
+            <LayerRow icon={<Circle size={16} strokeWidth={1.5} />} label="Neck" value={layers.neck} />
+          )}
           {layers.feet && (
             <LayerRow icon={<Footprints size={16} strokeWidth={1.5} />} label="Feet" value={layers.feet} />
           )}
@@ -150,12 +162,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
               Save — heading out at {formatTime(departureDate)}
             </Button>
           )
-        )}
-
-        {session.status === 'feedback_pending' && (
-          <Button onClick={() => router.push(`/feedback/${session.id}`)} className="mb-3">
-            I&apos;m back — give feedback →
-          </Button>
         )}
 
         <Button variant="ghost" onClick={() => router.push('/')}>

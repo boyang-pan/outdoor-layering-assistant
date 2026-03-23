@@ -14,6 +14,7 @@ function getStatusChip(session: Session) {
   if (session.status === 'upcoming') return <Chip variant="blue">Upcoming</Chip>
   if (session.status === 'active') return <Chip variant="blue">In progress</Chip>
   if (session.status === 'feedback_pending') return <Chip variant="amber">Feedback due</Chip>
+  if (session.status === 'expired') return <Chip variant="muted">No feedback</Chip>
   if (session.status === 'complete' && fb) {
     const hasWarm = (['start', 'middle', 'end'] as const).some(p => fb.phases[p].rating === 'too_warm')
     const hasCold = (['start', 'middle', 'end'] as const).some(p => fb.phases[p].rating === 'too_cold')

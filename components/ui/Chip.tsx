@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-type ChipVariant = 'upcoming' | 'amber' | 'green' | 'red' | 'blue'
+type ChipVariant = 'upcoming' | 'amber' | 'green' | 'red' | 'blue' | 'muted'
 
 interface ChipProps {
   variant: ChipVariant
@@ -14,6 +14,7 @@ const variantClasses: Record<ChipVariant, string> = {
   amber: 'bg-[var(--color-status-amber-bg)] border-amber-500/20 text-[var(--color-status-amber)]',
   green: 'bg-[var(--color-status-green-bg)] border-green-500/20 text-[var(--color-status-green)]',
   red: 'bg-[var(--color-status-red-bg)] border-red-500/20 text-[var(--color-status-red)]',
+  muted: 'bg-[var(--color-bg-raised)] border-[var(--color-border-subtle)] text-[var(--color-text-muted)]',
 }
 
 export function Chip({ variant, children, className }: ChipProps) {

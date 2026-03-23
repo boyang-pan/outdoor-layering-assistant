@@ -5,6 +5,14 @@ import { getSessions, upsertSession } from '@/lib/storage'
 export function FeedbackSyncProvider() {
   useEffect(() => {
     const sessions = getSessions()
+
+    // Expire feedback_pending sessions older than 48 hours
+    const EXPIRY_MS = 48 * 60 * 60 * 1000
+    const now = Date.now()
+    sessions
+      .filter(s => s.status === 'feedback_pending' && now - new Date(s.departureTime).getTime() > EXPIRY_MS)
+      .forEach(s => upsertSession({ ...s, status: 'expired' }))
+
     const unsynced = sessions.filter(s => s.feedback && !s.feedback.syncedToBackend)
     if (unsynced.length === 0) return
 

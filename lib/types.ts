@@ -3,7 +3,7 @@ export type Activity = 'run' | 'cycle' | 'other'
 export type Intensity = 'easy' | 'moderate' | 'hard'
 
 // ─── Session ──────────────────────────────────────────────────────────────────
-export type SessionStatus = 'upcoming' | 'active' | 'feedback_pending' | 'complete'
+export type SessionStatus = 'upcoming' | 'active' | 'feedback_pending' | 'complete' | 'expired'
 
 export interface Session {
   id: string
@@ -41,6 +41,7 @@ export interface LayerSet {
   gloves: string
   hat: string
   feet: string
+  neck?: string
   helmet?: string
 }
 
@@ -68,7 +69,7 @@ export type WoreDifferentState = 'followed' | 'skipped_items' | 'substituted'
 
 export interface LayerEdit {
   zone: keyof LayerSet
-  action: 'skipped' | 'substituted'
+  action: 'skipped' | 'substituted' | 'added'
   substituteValue?: string
 }
 

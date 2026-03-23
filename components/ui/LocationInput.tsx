@@ -33,7 +33,7 @@ export function LocationInput({ value, onChange, onSelect, placeholder = 'City o
     setLoading(true)
     const results = await searchLocations(query)
     setSuggestions(results)
-    setOpen(results.length > 0 || query.length >= 2)
+    setOpen(results.length > 0)
     setLoading(false)
   }, [])
 
