@@ -22,9 +22,10 @@ function baselineRecommendation(
       baseLayer: 'Short-sleeve top',
       midLayer: 'Skip it',
       jacket: 'No jacket',
-      legs: 'Short running tights',
+      legs: 'Shorts',
       gloves: 'No gloves',
       hat: 'Nothing',
+      neck: 'Nothing',
       feet: 'Standard running socks',
     }
   }
@@ -33,9 +34,10 @@ function baselineRecommendation(
       baseLayer: 'Long-sleeve top',
       midLayer: 'Skip it',
       jacket: effectiveWind > 20 ? 'Lightweight wind jacket' : 'No jacket',
-      legs: 'Short running tights',
+      legs: 'Shorts',
       gloves: 'No gloves',
       hat: 'Nothing',
+      neck: 'Nothing',
       feet: 'Standard running socks',
     }
   }
@@ -47,6 +49,7 @@ function baselineRecommendation(
       legs: 'Full-length running tights',
       gloves: minApparentTemp < 8 ? 'Thin liner gloves' : 'No gloves',
       hat: 'Nothing',
+      neck: 'Nothing',
       feet: 'Warm running socks',
     }
   }
@@ -58,6 +61,7 @@ function baselineRecommendation(
       legs: 'Full-length running tights',
       gloves: 'Thin liner gloves',
       hat: 'Thermal beanie',
+      neck: 'Nothing',
       feet: 'Thermal running socks',
     }
   }
@@ -66,9 +70,10 @@ function baselineRecommendation(
     baseLayer: 'Long-sleeve thermal top',
     midLayer: 'Insulated gilet',
     jacket: 'Waterproof rain jacket',
-    legs: 'Bib tights',
+    legs: 'Full-length running tights',
     gloves: 'Insulated running gloves',
-    hat: 'Thermal beanie + neck buff',
+    hat: 'Thermal beanie',
+    neck: 'Neck buff',
     feet: 'Thermal running socks',
   }
 }
@@ -136,9 +141,9 @@ function applyActivityLabels(layers: LayerSet, activity: Activity, minApparentTe
   if (result.gloves === 'Insulated running gloves') result.gloves = 'Insulated cycling gloves'
   // Feet (cycling-specific thresholds — feet get cold faster without muscle activity)
   if (minApparentTemp > 15) result.feet = 'Cycling socks'
-  else if (minApparentTemp > 8) result.feet = 'Lightweight overshoes'
-  else if (minApparentTemp > 4) result.feet = 'Insulated overshoes'
-  else result.feet = 'Insulated overshoes + thermal socks'
+  else if (minApparentTemp > 8) result.feet = 'Thermal socks'
+  else if (minApparentTemp > 4) result.feet = 'Cycling socks + overshoes'
+  else result.feet = 'Thermal socks + overshoes'
   result.helmet = 'Cycling helmet'
   return result
 }

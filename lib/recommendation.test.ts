@@ -57,8 +57,8 @@ describe('baselineRecommendation', () => {
     const r = baselineRecommendation(-5, 10)
     expect(r.baseLayer).toBe('Long-sleeve thermal top')
     expect(r.jacket).toBe('Waterproof rain jacket')
-    expect(r.legs).toBe('Bib tights')
-    expect(r.hat).toBe('Thermal beanie + neck buff')
+    expect(r.legs).toBe('Full-length running tights')
+    expect(r.hat).toBe('Thermal beanie')
   })
 })
 

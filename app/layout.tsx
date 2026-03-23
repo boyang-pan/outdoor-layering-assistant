@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { FeedbackSyncProvider } from '@/components/FeedbackSync'
+import { Toaster } from 'sonner'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-[var(--color-bg-base)]">
         <div className="max-w-[420px] mx-auto min-h-screen relative">
           <FeedbackSyncProvider />
+          <Toaster theme="dark" position="bottom-center" />
           {children}
         </div>
       </body>

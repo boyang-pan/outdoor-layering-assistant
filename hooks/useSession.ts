@@ -16,9 +16,10 @@ export function useSessions() {
   }, [])
 
   const upcomingSession = sessions.find(s => s.status === 'upcoming')
-  const pendingSession = sessions.find(s => s.status === 'feedback_pending')
+  const pendingSessions = sessions.filter(s => s.status === 'feedback_pending')
+  const pendingSession = pendingSessions[0]
 
-  return { sessions, saveSession, upcomingSession, pendingSession }
+  return { sessions, saveSession, upcomingSession, pendingSession, pendingSessions }
 }
 
 export function useSession(id: string) {

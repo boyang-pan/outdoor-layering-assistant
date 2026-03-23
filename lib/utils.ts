@@ -35,6 +35,22 @@ export function formatTime(date: Date): string {
   return `${hour12}:${minStr} ${ampm}`
 }
 
+export function formatSessionDate(date: Date): string {
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000)
+  const startOfWeekAgo = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000)
+  const time = formatTime(date)
+  if (date >= startOfToday) return `Today · ${time}`
+  if (date >= startOfYesterday) return `Yesterday · ${time}`
+  if (date >= startOfWeekAgo) {
+    const day = date.toLocaleDateString('en-US', { weekday: 'short' })
+    return `${day} · ${time}`
+  }
+  const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return `${label} · ${time}`
+}
+
 export function nextQuarter(now: Date): Date {
   const ms = 15 * 60 * 1000
   return new Date(Math.ceil(now.getTime() / ms) * ms)

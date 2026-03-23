@@ -13,7 +13,7 @@ import { useSessions } from '@/hooks/useSession'
 import { fetchWeatherWindow } from '@/lib/weather'
 import type { WeatherSnapshot, Session } from '@/lib/types'
 import { sessionName } from '@/lib/types'
-import { formatTime } from '@/lib/utils'
+import { formatSessionDate } from '@/lib/utils'
 import { Wind, Droplets, Activity } from 'lucide-react'
 
 function WeatherStrip({ location, weather }: { location: { lat: number; lon: number; label: string }; weather: WeatherSnapshot | null }) {
@@ -48,7 +48,7 @@ function WeatherStrip({ location, weather }: { location: { lat: number; lon: num
   )
 }
 
-function SessionBanner({ session, href, children }: { session: Session; href: string; children: React.ReactNode }) {
+function SessionBanner({ session, href, extraCount, children }: { session: Session; href: string; extraCount?: number; children: React.ReactNode }) {
   return (
     <Link href={href} className="block mb-3">
       <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] p-4 flex items-center gap-3 hover:bg-[var(--color-bg-muted)] transition-colors active:scale-[0.99]">
@@ -58,8 +58,13 @@ function SessionBanner({ session, href, children }: { session: Session; href: st
             {sessionName(session.activity, new Date(session.departureTime))}
           </p>
           <p className="text-[12px] text-[var(--color-text-muted)]">
-            {formatTime(new Date(session.departureTime))}
+            {formatSessionDate(new Date(session.departureTime))}
           </p>
+          {extraCount != null && extraCount > 0 && (
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+              +{extraCount} more session{extraCount > 1 ? 's' : ''}
+            </p>
+          )}
         </div>
         {children}
       </div>
@@ -70,7 +75,7 @@ function SessionBanner({ session, href, children }: { session: Session; href: st
 export default function HomePage() {
   const router = useRouter()
   const { profile, loaded } = useProfile()
-  const { sessions, upcomingSession, pendingSession } = useSessions()
+  const { sessions, upcomingSession, pendingSession, pendingSessions } = useSessions()
   const [weather, setWeather] = useState<WeatherSnapshot | null>(null)
 
   useEffect(() => {
@@ -121,7 +126,7 @@ export default function HomePage() {
         )}
 
         {pendingSession && (
-          <SessionBanner session={pendingSession} href={`/feedback/${pendingSession.id}`}>
+          <SessionBanner session={pendingSession} href={`/feedback/${pendingSession.id}`} extraCount={pendingSessions.length - 1}>
             <Chip variant="amber">Feedback due</Chip>
           </SessionBanner>
         )}

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopBar } from '@/components/layout/TopBar'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -12,6 +12,7 @@ import { defaultProfile, type Activity } from '@/lib/types'
 import { clearAll } from '@/lib/storage'
 import { geocodeLocation } from '@/lib/weather'
 import { LocationInput } from '@/components/ui/LocationInput'
+import { toast } from 'sonner'
 
 const PACE_OPTIONS = [
   { label: 'Leisurely · 15–20 km/h', value: 17 },
@@ -39,20 +40,29 @@ function ProgressBar({ value, max }: { value: number; max: number }) {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { profile, setProfile } = useProfile()
+  const { profile, setProfile, loaded } = useProfile()
   const [locationText, setLocationText] = useState(profile.defaultLocation?.label ?? '')
   const [locationLoading, setLocationLoading] = useState(false)
+
+  useEffect(() => {
+    if (loaded) setLocationText(profile.defaultLocation?.label ?? '')
+  }, [loaded])
   const [showReset, setShowReset] = useState(false)
 
   const saveLocation = async () => {
     if (!locationText.trim()) return
+    if (locationText === profile.defaultLocation?.label) {
+      toast.success('Location saved')
+      return
+    }
     setLocationLoading(true)
     try {
       const loc = await geocodeLocation(locationText)
       setProfile({ ...profile, defaultLocation: loc })
       setLocationText(loc.label)
+      toast.success('Location saved')
     } catch {
-      // keep existing
+      toast.error('Location not found — try a more specific name')
     } finally {
       setLocationLoading(false)
     }
@@ -143,7 +153,7 @@ export default function ProfilePage() {
               <Pill
                 key={opt.value}
                 active={profile.cyclingSpeedKmh === opt.value}
-                onClick={() => setProfile({ ...profile, cyclingSpeedKmh: opt.value })}
+                onClick={() => { setProfile({ ...profile, cyclingSpeedKmh: opt.value }); toast.success('Saved') }}
                 className="justify-start text-left"
               >
                 {opt.label}
@@ -156,7 +166,7 @@ export default function ProfilePage() {
             <LocationInput
               value={locationText}
               onChange={setLocationText}
-              onSelect={loc => { setProfile({ ...profile, defaultLocation: loc }); setLocationText(loc.label) }}
+              onSelect={loc => { setProfile({ ...profile, defaultLocation: loc }); setLocationText(loc.label); toast.success('Location saved') }}
               className="flex-1"
             />
             <button
