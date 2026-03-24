@@ -26,19 +26,22 @@ function WeatherStrip({ location, weather }: { location: { lat: number; lon: num
 
   return (
     <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] p-4 mb-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.5px]">{location.label}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="relative group min-w-0">
+          <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.5px] truncate">{location.label}</p>
+          <div className="hidden group-hover:block absolute bottom-full mb-1 left-0 z-50 w-max max-w-[260px] px-3 py-2.5 bg-[var(--color-bg-overlay)] border border-[var(--color-border-base)] rounded-[var(--radius-md)] text-[11px] leading-relaxed text-[var(--color-text-secondary)] normal-case tracking-normal shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+            {location.label}
+          </div>
           <p className="text-3xl font-light font-mono text-[var(--color-text-primary)] mt-1">
             {Math.round(weather.minApparentTemp)}°C
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1.5 mt-1">
-          <div className="flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
+        <div className="flex flex-col items-end gap-1.5 mt-1 shrink-0">
+          <div className="flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] whitespace-nowrap">
             <Wind size={12} strokeWidth={1.5} />
             {Math.round(weather.maxWindspeed)} km/h
           </div>
-          <div className="flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
+          <div className="flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] whitespace-nowrap">
             <Droplets size={12} strokeWidth={1.5} />
             {weather.maxPrecipProbability}%
           </div>
@@ -127,7 +130,10 @@ export default function HomePage() {
 
         {pendingSession && (
           <SessionBanner session={pendingSession} href={`/feedback/${pendingSession.id}`} extraCount={pendingSessions.length - 1}>
-            <Chip variant="amber">Feedback due</Chip>
+            {Date.now() < new Date(pendingSession.departureTime).getTime() + pendingSession.durationMins * 60 * 1000
+              ? <Chip variant="blue">In progress</Chip>
+              : <Chip variant="amber">Feedback due</Chip>
+            }
           </SessionBanner>
         )}
 

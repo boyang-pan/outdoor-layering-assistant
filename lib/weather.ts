@@ -17,6 +17,7 @@ const GeoResultSchema = z.object({
     name: z.string(),
     country: z.string().optional(),
     admin1: z.string().optional(),
+    admin2: z.string().optional(),
   })).optional(),
 })
 
@@ -54,7 +55,7 @@ export async function searchLocations(query: string): Promise<Array<{ lat: numbe
   return parsed.data.results.map(r => ({
     lat: r.latitude,
     lon: r.longitude,
-    label: [r.name, r.admin1, r.country].filter(Boolean).join(', '),
+    label: [r.name, r.admin2, r.admin1, r.country].filter(Boolean).join(', '),
   }))
 }
 

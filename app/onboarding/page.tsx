@@ -89,7 +89,7 @@ export default function OnboardingPage() {
       {step === 0 && (
         <div className="flex-1">
           <h1 className="text-xl font-medium text-[var(--color-text-primary)] mb-1">Do you tend to run hot or cold?</h1>
-          <p className="text-[13px] text-[var(--color-text-muted)] mb-8">Helps calibrate your first recommendations</p>
+          <p className="text-[13px] text-[var(--color-text-muted)] mb-8">If you run hot, we&apos;ll suggest fewer or lighter layers than the weather calls for — and warmer if you run cold.</p>
           <div className="flex flex-wrap gap-2">
             {HEAT_OPTIONS.map((opt, i) => (
               <Pill key={opt.label} active={heatIdx === i} onClick={() => setHeatIdx(i)}>
