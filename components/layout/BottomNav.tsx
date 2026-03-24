@@ -5,7 +5,7 @@ import { Home, Clock, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Home', Icon: Home },
+  { href: '/dashboard', label: 'Home', Icon: Home },
   { href: '/history', label: 'History', Icon: Clock },
   { href: '/profile', label: 'Profile', Icon: User },
 ]

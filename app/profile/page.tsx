@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
 import { Card } from '@/components/ui/Card'
 import { SectionLabel } from '@/components/ui/SectionLabel'
+import { useClerk } from '@clerk/nextjs'
 import { useProfile } from '@/hooks/useProfile'
 import { defaultProfile, type Activity } from '@/lib/types'
 import { clearAll } from '@/lib/storage'
@@ -69,6 +70,7 @@ function profileSummary(profile: { heatSensitivity: number; sessionCount: number
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { signOut } = useClerk()
   const { profile, setProfile, loaded } = useProfile()
   const [locationText, setLocationText] = useState(profile.defaultLocation?.label ?? '')
   const [locationLoading, setLocationLoading] = useState(false)
@@ -203,6 +205,13 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-6 pt-5 border-t border-[var(--color-border-subtle)]">
+            <button
+              type="button"
+              onClick={() => signOut({ redirectUrl: '/' })}
+              className="text-[var(--color-text-secondary)] text-[13px] hover:opacity-80 transition-opacity mb-4 block"
+            >
+              Sign out
+            </button>
             {!showReset ? (
               <button
                 type="button"
