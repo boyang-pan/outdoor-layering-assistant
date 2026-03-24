@@ -12,6 +12,7 @@ import { defaultProfile, type Activity } from '@/lib/types'
 import { clearAll } from '@/lib/storage'
 import { geocodeLocation } from '@/lib/weather'
 import { LocationInput } from '@/components/ui/LocationInput'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { toast } from 'sonner'
 
 const PACE_OPTIONS = [
@@ -29,13 +30,41 @@ function heatLabel(v: number): string {
   return 'Neutral'
 }
 
-function ProgressBar({ value, max }: { value: number; max: number }) {
-  const pct = Math.min(100, Math.round((value / max) * 100))
-  return (
-    <div className="h-1.5 rounded-full bg-[var(--color-bg-raised)]">
-      <div className="h-1.5 rounded-full bg-[var(--color-accent)] transition-all" style={{ width: `${pct}%` }} />
-    </div>
-  )
+function activityLabel(v: number): string {
+  if (v >= 0.7) return 'Runs warm'
+  if (v >= 0.3) return 'Slightly warm'
+  if (v <= -0.7) return 'Runs cold'
+  if (v <= -0.3) return 'Slightly cold'
+  return 'Neutral'
+}
+
+const ACTIVITY_SUMMARY_LABELS: Record<Activity, string> = { run: 'running', cycle: 'cycling', other: 'other activities' }
+
+function profileSummary(profile: { heatSensitivity: number; sessionCount: number; feedbackCount: number; activityModifiers: Record<Activity, number> }): string {
+  if (profile.feedbackCount === 0) {
+    return 'Rate a few sessions and the app will start learning your tendencies.'
+  }
+
+  const h = profile.heatSensitivity
+  const heatDesc = heatLabel(h).toLowerCase().replace(/^runs\b/, 'run')
+  const heatPart = Math.abs(h) < 0.4
+    ? 'Your heat tendency is roughly average'
+    : `You tend to ${heatDesc}`
+
+  let activityPart = ''
+  if (profile.sessionCount >= 3) {
+    const activities: Activity[] = ['run', 'cycle', 'other']
+    const strongest = activities
+      .filter(a => Math.abs(profile.activityModifiers[a]) >= 0.3)
+      .sort((a, b) => Math.abs(profile.activityModifiers[b]) - Math.abs(profile.activityModifiers[a]))[0]
+    if (strongest) {
+      const label = activityLabel(profile.activityModifiers[strongest]).toLowerCase().replace(/^runs\b/, 'run')
+      activityPart = `, though ${label} when ${ACTIVITY_SUMMARY_LABELS[strongest]}`
+    }
+  }
+
+  const nudge = profile.feedbackCount < 10 ? '. Keep rating sessions to sharpen the recommendations.' : '.'
+  return `${heatPart}${activityPart}${nudge}`
 }
 
 export default function ProfilePage() {
@@ -81,7 +110,13 @@ export default function ProfilePage() {
       <TopBar />
       <div className="px-5 py-6">
         {/* Heat sensitivity */}
-        <SectionLabel className="mt-0">Heat sensitivity</SectionLabel>
+        <div className="flex items-center gap-1.5 mt-0 mb-3">
+          <SectionLabel className="mt-0 mb-0">Heat sensitivity</SectionLabel>
+          <InfoTooltip
+            content="Running warm means you overheat more easily than average — the app uses this to suggest fewer or lighter layers than the weather alone would call for, and vice versa."
+            placement="bottom"
+          />
+        </div>
         <Card className="mb-2.5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-[var(--color-text-primary)]">{heatLabel(profile.heatSensitivity)}</span>
@@ -100,14 +135,19 @@ export default function ProfilePage() {
         </Card>
 
         {/* Activity adjustments */}
-        <SectionLabel>Activity adjustments</SectionLabel>
+        <div className="flex items-center gap-1.5 mt-7 mb-3">
+          <SectionLabel className="mt-0 mb-0">Activity adjustments</SectionLabel>
+          <InfoTooltip
+            content="The app learns whether you tend to run warmer or cooler for each activity type, and fine-tunes layer suggestions accordingly."
+          />
+        </div>
         <Card className="mb-2.5 space-y-3">
           {ACTIVITIES.map(a => (
             <div key={a} className="flex items-center justify-between">
               <span className="text-sm text-[var(--color-text-secondary)]">{ACTIVITY_LABELS[a]}</span>
               {profile.sessionCount >= 3 ? (
-                <span className="font-mono text-[12px] text-[var(--color-text-muted)]">
-                  {profile.activityModifiers[a] >= 0 ? '+' : ''}{profile.activityModifiers[a].toFixed(1)} tier
+                <span className="text-[12px] text-[var(--color-text-secondary)]">
+                  {activityLabel(profile.activityModifiers[a])}
                 </span>
               ) : (
                 <span className="text-[12px] text-[var(--color-text-muted)]">{'< 3 sessions'}</span>
@@ -118,30 +158,13 @@ export default function ProfilePage() {
 
         {/* Your profile */}
         <SectionLabel>Your profile</SectionLabel>
-        <Card className="mb-2.5 space-y-3">
-          <div>
-            <div className="flex justify-between text-[12px] text-[var(--color-text-muted)] mb-1.5">
-              <span>Rated sessions</span>
-              <span className="font-mono">{profile.feedbackCount} <span className="text-[var(--color-text-muted)] font-sans font-normal">(keeps improving)</span></span>
-            </div>
-            <ProgressBar value={profile.feedbackCount} max={20} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] text-[var(--color-text-muted)]">Heat tendency</span>
-            <span className="text-[12px] text-[var(--color-text-secondary)]">{heatLabel(profile.heatSensitivity)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] text-[var(--color-text-muted)]">Activity tuning</span>
-            <span className="text-[12px] text-[var(--color-text-secondary)]">
-              {profile.sessionCount >= 3 ? 'Active' : 'Needs 3+ sessions'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[12px] text-[var(--color-text-muted)]">Intensity tuning</span>
-            <span className="text-[12px] text-[var(--color-text-secondary)]">
-              {profile.sessionCount >= 5 ? 'Active' : 'Needs 5+ sessions'}
-            </span>
-          </div>
+        <Card className="mb-2.5">
+          <p className="text-[12px] text-[var(--color-text-muted)] mb-2">
+            {profile.feedbackCount} session{profile.feedbackCount !== 1 ? 's' : ''} rated
+          </p>
+          <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed">
+            {profileSummary(profile)}
+          </p>
         </Card>
 
         {/* Settings */}
@@ -173,7 +196,7 @@ export default function ProfilePage() {
               type="button"
               onClick={saveLocation}
               disabled={locationLoading}
-              className="h-12 px-4 rounded-[var(--radius-md)] bg-[var(--color-accent)] text-white text-[12px] font-medium disabled:opacity-50 shrink-0"
+              className="h-10 px-4 rounded-[var(--radius-md)] bg-[var(--color-accent)] text-white text-[12px] font-medium disabled:opacity-50 shrink-0"
             >
               Save
             </button>

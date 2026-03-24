@@ -8,6 +8,7 @@ import { Pill } from '@/components/ui/Pill'
 import { Slider } from '@/components/ui/Slider'
 import { TimePicker } from '@/components/ui/TimePicker'
 import { SectionLabel } from '@/components/ui/SectionLabel'
+import { LocationInput } from '@/components/ui/LocationInput'
 import { useProfile } from '@/hooks/useProfile'
 import { useSessions } from '@/hooks/useSession'
 import { fetchWeatherWindow, geocodeLocation } from '@/lib/weather'
@@ -117,7 +118,7 @@ export default function NewPage() {
     try {
       let lat: number, lon: number, label: string
 
-      if (locationCoords && locationText === profile.defaultLocation?.label) {
+      if (locationCoords) {
         lat = locationCoords.lat
         lon = locationCoords.lon
         label = locationText
@@ -233,19 +234,17 @@ export default function NewPage() {
           <div>
             <SectionLabel className="mt-0">Location</SectionLabel>
             <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="City or postcode"
+              <LocationInput
                 value={locationText}
-                onChange={e => { setLocationText(e.target.value); setLocationCoords(null) }}
-                className="flex-1 h-12 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-[var(--radius-md)] px-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
-                style={{ fontSize: '16px' }}
+                onChange={(text) => { setLocationText(text); setLocationCoords(null) }}
+                onSelect={(loc) => { setLocationText(loc.label); setLocationCoords({ lat: loc.lat, lon: loc.lon }) }}
+                className="flex-1"
               />
               <button
                 type="button"
                 onClick={detectLocation}
                 disabled={geoLoading}
-                className="h-12 px-4 rounded-[var(--radius-md)] border border-[var(--color-border-base)] text-[var(--color-text-secondary)] text-sm hover:bg-[var(--color-bg-raised)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="h-10 px-4 rounded-[var(--radius-md)] border border-[var(--color-border-base)] text-[var(--color-text-secondary)] text-sm hover:bg-[var(--color-bg-raised)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 {geoLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} strokeWidth={1.5} />}
                 Detect
