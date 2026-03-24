@@ -25,8 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider
         signInUrl="/sign-in"
         signUpUrl="/sign-up"
-        afterSignInUrl="/dashboard"
-        afterSignUpUrl="/dashboard"
       >
       <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
         <body className="min-h-screen bg-[var(--color-bg-base)]">
