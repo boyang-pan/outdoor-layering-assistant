@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export function proxy(request: NextRequest) {
-  // Onboarding redirect is handled client-side to avoid SSR localStorage access
-  return NextResponse.next()
-}
+const isPublicRoute = createRouteMatcher(['/', '/sign-in(.*)', '/sign-up(.*)'])
+
+export const proxy = clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect()
+  }
+})
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
