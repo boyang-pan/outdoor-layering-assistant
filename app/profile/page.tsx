@@ -172,7 +172,12 @@ export default function ProfilePage() {
         {/* Settings */}
         <SectionLabel>Settings</SectionLabel>
         <Card className="mb-2.5">
-          <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.5px] mb-3">Typical cycling pace</p>
+          <div className="flex items-center gap-1.5 mb-3">
+            <p className="text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.5px]">Typical cycling pace</p>
+            <InfoTooltip
+              content="Your cycling speed determines how much wind you're exposed to, which changes how cold you feel. A faster pace means more wind chill — the app factors this in when calculating your thermal comfort and suggesting layers."
+            />
+          </div>
           <div className="flex flex-col gap-2">
             {PACE_OPTIONS.map(opt => (
               <Pill
