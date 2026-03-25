@@ -145,11 +145,19 @@ export default function OnboardingPage() {
           </Button>
         )}
         {step < 2 ? (
-          <Button onClick={next} className="flex-1">
+          <Button
+            onClick={next}
+            className="flex-1"
+            disabled={step === 0 ? heatIdx === null : paceIdx === null}
+          >
             Continue
           </Button>
         ) : (
-          <Button onClick={finish} className="flex-1">
+          <Button
+            onClick={finish}
+            className="flex-1"
+            disabled={!locationText.trim() && !profile.defaultLocation}
+          >
             Get started
           </Button>
         )}

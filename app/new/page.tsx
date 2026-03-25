@@ -227,7 +227,7 @@ export default function NewPage() {
             <SectionLabel className="mt-0">When</SectionLabel>
             <TimePicker value={departureTime} onChange={setDepartureTime} />
             <p className="text-[11px] text-[var(--color-text-muted)] mt-2">
-              Forecast covers {formatTime(departureTime)} → {formatTime(windowEnd)}
+              Workout: {formatTime(departureTime)} → {formatTime(windowEnd)}
             </p>
           </div>
 
